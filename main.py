@@ -21,6 +21,7 @@ CHANNEL_IDS = [
 TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
 WEBHOOK_URL = f"https://entrebusqueda.onrender.com/{TOKEN}"
 
+# Crear la aplicación de Flask
 app = Flask(__name__)
 
 # Crear la aplicación del bot
@@ -86,17 +87,19 @@ application.add_handler(CommandHandler("buscar", buscar))
 async def set_webhook():
     await application.bot.set_webhook(WEBHOOK_URL)
 
+# Endpoint del webhook
 @app.route(f"/{TOKEN}", methods=["POST"])
 async def webhook():
     update = Update.de_json(request.get_json(), application.bot)
     asyncio.create_task(application.process_update(update))
     return "OK", 200
 
+# Función principal que se ejecuta al inicio
 if __name__ == "__main__":
     async def main():
         await application.initialize()  # Asegúrate de llamar a initialize() antes de empezar a usar la aplicación
         await application.start()
-        await set_webhook()
+        await set_webhook()  # Configura el webhook correctamente
         app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 10000)))
 
     asyncio.run(main())
