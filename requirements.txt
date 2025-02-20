@@ -1,4 +1,4 @@
-Flask
-python-telegram-bot
-waitress
-Werkzeug
+Flask==3.1.0
+python-telegram-bot==21.10
+waitress==3.0.2
+httpx==0.28.1
