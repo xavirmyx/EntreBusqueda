@@ -1,5 +1,6 @@
 import logging
 import os
+from flask import Flask, request
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import Application, CommandHandler, CallbackContext
 
@@ -13,6 +14,12 @@ CHANNEL_IDS = [
     "-1001918569531"   # ID del segundo canal (cambia según corresponda)
 ]
 
+TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
+WEBHOOK_URL = f"https://{os.getenv('https://entrebusqueda.onrender.com')}/{TOKEN}"
+
+app = Flask(__name__)
+application = Application.builder().token(TOKEN).build()
+
 # Comando /start
 async def start(update: Update, context: CallbackContext):
     await update.message.reply_text(
@@ -25,7 +32,6 @@ async def start(update: Update, context: CallbackContext):
 # Comando /buscar
 async def buscar(update: Update, context: CallbackContext):
     keyword = " ".join(context.args).strip()
-
     if not keyword:
         await update.message.reply_text("Uso: /buscar [palabra clave]")
         return
@@ -50,17 +56,14 @@ async def buscar(update: Update, context: CallbackContext):
     reply_markup = InlineKeyboardMarkup(keyboard)
     await update.message.reply_text("Resultados encontrados:", reply_markup=reply_markup)
 
-# Función principal
-def main():
-    # Crear la aplicación de Telegram
-    application = Application.builder().token(os.getenv("TELEGRAM_BOT_TOKEN")).build()
+# Configurar webhook
+application.bot.set_webhook(WEBHOOK_URL)
 
-    # Agregar los manejadores de comandos
-    application.add_handler(CommandHandler("start", start))
-    application.add_handler(CommandHandler("buscar", buscar))
-
-    # Ejecutar el bot
-    application.run_polling()
+@app.route(f'/{TOKEN}', methods=["POST"])
+def webhook():
+    update = Update.de_json(request.get_json(), application.bot)
+    application.update_queue.put(update)
+    return "OK", 200
 
 if __name__ == "__main__":
-    main()
+    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
