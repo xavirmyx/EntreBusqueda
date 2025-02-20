@@ -40,7 +40,7 @@ async def buscar(update: Update, context: ContextTypes.DEFAULT_TYPE):
     resultados = []
     for channel_id in CHANNEL_IDS:
         try:
-            async for message in context.bot.get_chat_history(channel_id, limit=100):
+            async for message in application.bot.get_chat_history(int(channel_id), limit=100):
                 if message.text and keyword.lower() in message.text.lower():
                     resultados.append((channel_id, message.message_id, message.text[:100]))
         except Exception as e:
@@ -65,13 +65,20 @@ application.add_handler(CommandHandler("buscar", buscar))
 async def set_webhook():
     await application.bot.set_webhook(WEBHOOK_URL)
 
-asyncio.run(set_webhook())
-
 @app.route(f"/{TOKEN}", methods=["POST"])
-def webhook():
+async def webhook():
     update = Update.de_json(request.get_json(), application.bot)
-    application.update_queue.put(update)
+    await application.update_queue.put_nowait(update)  # Corrección del error de queue
     return "OK", 200
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 10000)))
+    async def main():
+        await application.initialize()
+        await set_webhook()
+        await application.run_webhook(
+            listen="0.0.0.0",
+            port=int(os.environ.get("PORT", 10000)),
+            webhook_url=WEBHOOK_URL
+        )
+
+    asyncio.run(main())
