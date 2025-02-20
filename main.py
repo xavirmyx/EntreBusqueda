@@ -88,6 +88,11 @@ def webhook():
     asyncio.run_coroutine_threadsafe(application.process_update(update), asyncio.get_event_loop())
     return "OK", 200
 
+# Nueva ruta raíz para evitar error 404
+@app.route("/", methods=["GET"])
+def home():
+    return "🤖 Bot de Telegram funcionando correctamente 🚀", 200
+
 # Función para correr Flask en un hilo separado
 def run_flask():
     app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 10000)))
@@ -99,6 +104,13 @@ if __name__ == "__main__":
         await application.start()
         await set_webhook()
         logger.info("✅ Bot en funcionamiento. Webhook configurado correctamente.")
+        
+        # Enviar mensaje de bienvenida al grupo al iniciar
+        await application.bot.send_message(
+            chat_id=GROUP_ID,
+            text="👋 ¡Hola! El bot está en funcionamiento. Usa `/go` para ver los comandos disponibles.",
+            parse_mode="Markdown"
+        )
     
     # Iniciar Flask en un hilo separado
     threading.Thread(target=run_flask, daemon=True).start()
