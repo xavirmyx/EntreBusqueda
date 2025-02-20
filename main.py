@@ -5,6 +5,7 @@ from flask import Flask, request
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import Application, CommandHandler, ContextTypes
 import threading
+from waitress import serve
 
 logging.basicConfig(format="%(asctime)s - %(name)s - %(levelname)s - %(message)s", level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -81,7 +82,7 @@ def home():
     return "🤖 Bot funcionando 🚀", 200
 
 def run_flask():
-    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 10000)))
+    serve(app, host="0.0.0.0", port=int(os.environ.get("PORT", 10000)))
 
 if __name__ == "__main__":
     async def main():
