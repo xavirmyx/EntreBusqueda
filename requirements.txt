@@ -1,5 +1,4 @@
+Flask[async]
 python-telegram-bot>=20.0
 python-dotenv
-telegram
-Flask[async]
 gunicorn
