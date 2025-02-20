@@ -4,6 +4,19 @@ import os
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import Updater, CommandHandler, CallbackQueryHandler, CallbackContext
 
+# Verificar si SQLite está disponible
+def check_sqlite():
+    try:
+        conn = sqlite3.connect(":memory:")
+        cursor = conn.cursor()
+        cursor.execute("SELECT sqlite_version();")
+        version = cursor.fetchone()[0]
+        conn.close()
+        logging.info(f"SQLite version: {version}")
+    except Exception as e:
+        logging.error(f"SQLite no está disponible: {e}")
+        exit(1)
+
 # Configuración de logging
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -103,6 +116,7 @@ def eliminar(update: Update, context: CallbackContext):
 
 # Función principal
 def main():
+    check_sqlite()
     init_db()
     updater = Updater(os.getenv("TELEGRAM_BOT_TOKEN"), use_context=True)
     dp = updater.dispatcher
