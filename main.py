@@ -14,7 +14,11 @@ GROUP_ID = -1001918569531
 CHANNEL_IDS = [-1001918569531, -1001918569532]
 
 TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
-WEBHOOK_URL = "https://entrebusqueda.onrender.com/webhook"
+if not TOKEN:
+    raise ValueError("Falta la variable de entorno TELEGRAM_BOT_TOKEN")
+
+WEBHOOK_URL = os.getenv("WEBHOOK_URL", "https://entrebusqueda.onrender.com/webhook")
+PORT = int(os.getenv("PORT", 10000))
 
 app = Flask(__name__)
 application = Application.builder().token(TOKEN).build()
@@ -83,7 +87,7 @@ def home():
     return "🤖 Bot funcionando 🚀", 200
 
 def run_flask():
-    serve(app, host="0.0.0.0", port=int(os.environ.get("PORT", 10000)))
+    serve(app, host="0.0.0.0", port=PORT)
 
 if __name__ == "__main__":
     async def main():
