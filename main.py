@@ -94,7 +94,7 @@ async def webhook():
 
 if __name__ == "__main__":
     async def main():
-        await application.initialize()
+        await application.initialize()  # Asegúrate de llamar a initialize() antes de empezar a usar la aplicación
         await application.start()
         await set_webhook()
         app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 10000)))
