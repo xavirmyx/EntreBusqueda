@@ -4,7 +4,6 @@ import asyncio
 from flask import Flask, request
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import Application, CommandHandler, ContextTypes
-from telegram.ext._utils.types import async_to_sync
 
 # Configuración de logging
 logging.basicConfig(format="%(asctime)s - %(name)s - %(levelname)s - %(message)s", level=logging.INFO)
@@ -22,8 +21,9 @@ CHANNEL_IDS = [
 TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
 WEBHOOK_URL = f"https://entrebusqueda.onrender.com/{TOKEN}"
 
-# Inicializar Flask y la aplicación de Telegram
 app = Flask(__name__)
+
+# Crear la aplicación del bot
 application = Application.builder().token(TOKEN).build()
 
 # Comando /start
@@ -32,11 +32,11 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return  # Ignorar mensajes fuera del grupo
 
     await update.message.reply_text(
-        "\U0001F44B ¡Hola! Bienvenido al *Buscador de EntresHijos* \U0001F50D\n\n"
-        "\U0001F4CC *Comandos disponibles:*\n"
+        "👋 ¡Hola! Bienvenido al *Buscador de EntresHijos* 🔍\n\n"
+        "📌 *Comandos disponibles:*\n"
         "▶️ `/start` - Mostrar este mensaje\n"
         "▶️ `/buscar [palabra clave]` - Buscar contenido en los canales\n\n"
-        "\U0001F50E *Escribe una palabra clave para encontrar información rápida!*",
+        "🔎 *Escribe una palabra clave para encontrar información rápida!*",
         parse_mode="Markdown"
     )
 
@@ -86,24 +86,18 @@ application.add_handler(CommandHandler("buscar", buscar))
 async def set_webhook():
     await application.bot.set_webhook(WEBHOOK_URL)
 
-# Ruta para manejar las actualizaciones de Telegram
 @app.route(f"/{TOKEN}", methods=["POST"])
 def webhook():
-    try:
-        update = Update.de_json(request.get_json(), application.bot)
-        async_to_sync(application.update_queue.put)(update)
-    except Exception as e:
-        logger.error(f"Error en el webhook: {e}")
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+    update = Update.de_json(request.get_json(), application.bot)
+    loop.run_until_complete(application.process_update(update))
     return "OK", 200
 
 if __name__ == "__main__":
-    loop = asyncio.new_event_loop()
-    asyncio.set_event_loop(loop)
+    async def main():
+        await application.initialize()
+        await set_webhook()
+        app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 10000)))
 
-    loop.run_until_complete(application.initialize())
-    loop.run_until_complete(set_webhook())
-
-    from threading import Thread
-    Thread(target=loop.run_forever, daemon=True).start()
-
-    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 10000)))
+    asyncio.run(main())
