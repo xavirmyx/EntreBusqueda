@@ -26,15 +26,15 @@ app = Flask(__name__)
 # Crear la aplicación del bot
 application = Application.builder().token(TOKEN).build()
 
-# Comando /start
-async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+# Comando /go
+async def go(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.message.chat_id != GROUP_ID:
         return  # Ignorar mensajes fuera del grupo
 
     await update.message.reply_text(
         "👋 ¡Hola! Bienvenido al *Buscador de EntresHijos* 🔍\n\n"
         "📌 *Comandos disponibles:*\n"
-        "▶️ `/start` - Mostrar este mensaje\n"
+        "▶️ `/go` - Mostrar este mensaje\n"
         "▶️ `/buscar [palabra clave]` - Buscar contenido en los canales\n\n"
         "🔎 *Escribe una palabra clave para encontrar información rápida!*",
         parse_mode="Markdown"
@@ -79,7 +79,7 @@ async def buscar(update: Update, context: ContextTypes.DEFAULT_TYPE):
     )
 
 # Configurar handlers
-application.add_handler(CommandHandler("start", start))
+application.add_handler(CommandHandler("go", go))
 application.add_handler(CommandHandler("buscar", buscar))
 
 # Configurar webhook correctamente
@@ -87,16 +87,15 @@ async def set_webhook():
     await application.bot.set_webhook(WEBHOOK_URL)
 
 @app.route(f"/{TOKEN}", methods=["POST"])
-def webhook():
-    loop = asyncio.new_event_loop()
-    asyncio.set_event_loop(loop)
+async def webhook():
     update = Update.de_json(request.get_json(), application.bot)
-    loop.run_until_complete(application.process_update(update))
+    asyncio.create_task(application.process_update(update))
     return "OK", 200
 
 if __name__ == "__main__":
     async def main():
         await application.initialize()
+        await application.start()
         await set_webhook()
         app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 10000)))
 
