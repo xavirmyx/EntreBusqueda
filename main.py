@@ -44,23 +44,23 @@ async def buscar(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text("⚠️ *Uso incorrecto:* `/buscar [palabra clave]`", parse_mode="Markdown")
         return
 
-    await update.message.reply_text("🔎 *Buscando...* ⏳", parse_mode="Markdown")
+    await update.message.reply_text(f"🔎 *Buscando:* `{keyword}` ⏳", parse_mode="Markdown")
     
     resultados = []
     for channel_id in CHANNEL_IDS:
         try:
             chat = await application.bot.get_chat(channel_id)
-            async for message in application.bot.get_chat_history(chat.id, limit=100):
+            async for message in application.bot.get_chat_history(chat.id, limit=200):
                 if message.text and keyword.lower() in message.text.lower():
                     resultados.append((channel_id, message.message_id, message.text[:100]))
         except Exception as e:
             logger.error(f"Error en canal {channel_id}: {e}")
     
     if not resultados:
-        await update.message.reply_text("❌ *No se encontraron resultados.*", parse_mode="Markdown")
+        await update.message.reply_text(f"❌ *No se encontraron resultados para:* `{keyword}`", parse_mode="Markdown")
         return
     
-    keyboard = [[InlineKeyboardButton(f"📌 Mensaje {r[1]}", url=f"https://t.me/c/{abs(r[0])}/{r[1]}")] for r in resultados]
+    keyboard = [[InlineKeyboardButton(f"📌 Mensaje {r[1]}", url=f"https://t.me/c/{abs(r[0])}/{r[1]}")] for r in resultados[:10]]
     reply_markup = InlineKeyboardMarkup(keyboard)
     
     await update.message.reply_text(
