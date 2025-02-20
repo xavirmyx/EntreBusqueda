@@ -1,11 +1,12 @@
 import logging
 import os
+import asyncio
 from flask import Flask, request
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
-from telegram.ext import Application, CommandHandler, CallbackContext
+from telegram.ext import Application, CommandHandler, ContextTypes
 
 # Configuración de logging
-logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
+logging.basicConfig(format="%(asctime)s - %(name)s - %(levelname)s - %(message)s", level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 # Canales donde se buscará el contenido
@@ -15,13 +16,13 @@ CHANNEL_IDS = [
 ]
 
 TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
-WEBHOOK_URL = f"https://{os.getenv('https://entrebusqueda.onrender.com')}/{TOKEN}"
+WEBHOOK_URL = f"https://entrebusqueda.onrender.com/{TOKEN}"
 
 app = Flask(__name__)
 application = Application.builder().token(TOKEN).build()
 
 # Comando /start
-async def start(update: Update, context: CallbackContext):
+async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(
         "Bienvenido al bot avanzado de búsqueda de EntresHijos!\n\n"
         "Comandos disponibles:\n"
@@ -30,7 +31,7 @@ async def start(update: Update, context: CallbackContext):
     )
 
 # Comando /buscar
-async def buscar(update: Update, context: CallbackContext):
+async def buscar(update: Update, context: ContextTypes.DEFAULT_TYPE):
     keyword = " ".join(context.args).strip()
     if not keyword:
         await update.message.reply_text("Uso: /buscar [palabra clave]")
@@ -56,14 +57,21 @@ async def buscar(update: Update, context: CallbackContext):
     reply_markup = InlineKeyboardMarkup(keyboard)
     await update.message.reply_text("Resultados encontrados:", reply_markup=reply_markup)
 
-# Configurar webhook
-application.bot.set_webhook(WEBHOOK_URL)
+# Configurar handlers
+application.add_handler(CommandHandler("start", start))
+application.add_handler(CommandHandler("buscar", buscar))
 
-@app.route(f'/{TOKEN}', methods=["POST"])
+# Configurar webhook correctamente
+async def set_webhook():
+    await application.bot.set_webhook(WEBHOOK_URL)
+
+asyncio.run(set_webhook())
+
+@app.route(f"/{TOKEN}", methods=["POST"])
 def webhook():
     update = Update.de_json(request.get_json(), application.bot)
     application.update_queue.put(update)
     return "OK", 200
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
+    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 10000)))
