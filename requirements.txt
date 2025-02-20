@@ -1,5 +1,4 @@
 Flask[async]
 python-telegram-bot>=20.0
 python-dotenv
-gunicorn
-uvicorn[gunicorn]
+waitress  # Mejor que gunicorn para Flask en Render
