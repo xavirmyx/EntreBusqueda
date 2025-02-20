@@ -74,7 +74,11 @@ application.add_handler(CommandHandler("go", go))
 application.add_handler(CommandHandler("buscar", buscar))
 
 async def set_webhook():
-    await application.bot.set_webhook(WEBHOOK_URL)
+    success = await application.bot.set_webhook(WEBHOOK_URL)
+    if success:
+        logger.info("✅ Webhook configurado correctamente.")
+    else:
+        logger.error("❌ Error al configurar el webhook.")
 
 @app.route("/webhook", methods=["POST"])
 def webhook():
