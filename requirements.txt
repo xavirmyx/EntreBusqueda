@@ -1,5 +1,5 @@
 python-telegram-bot>=20.0
 python-dotenv
 telegram
-pip install Flask[async]
+Flask[async]
 gunicorn
