@@ -45,7 +45,8 @@ async def buscar(update: Update, context: ContextTypes.DEFAULT_TYPE):
     resultados = []
     for channel_id in CHANNEL_IDS:
         try:
-            async for message in application.bot.get_chat_history(channel_id, limit=100):
+            chat = await application.bot.get_chat(channel_id)
+            async for message in application.bot.get_chat_history(chat.id, limit=100):
                 if message.text and keyword.lower() in message.text.lower():
                     resultados.append((channel_id, message.message_id, message.text[:100]))
         except Exception as e:
@@ -90,7 +91,6 @@ if __name__ == "__main__":
         await application.start()
         await set_webhook()
         logger.info("✅ Bot en funcionamiento.")
-        await application.bot.send_message(GROUP_ID, "👋 ¡Bot en línea! Usa `/go` para ver comandos.", parse_mode="Markdown")
     
     threading.Thread(target=run_flask, daemon=True).start()
     asyncio.run(main())
